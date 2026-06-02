@@ -4,7 +4,7 @@ import { ACHIEVEMENT_RULES, getLevelInfo } from "@/lib/gamification";
 import type { AchievementKey, Database } from "@/types/database";
 
 type AwardInput = {
-  supabase: SupabaseClient<Database>;
+  supabase: SupabaseClient<Database, "public", any>;
   userId: string;
   totalXp: number;
   completedMissions: number;

@@ -4,7 +4,7 @@ import { addDaysToDateKey, getTodayDateKey } from "@/lib/date";
 import type { Database } from "@/types/database";
 
 export async function updateUserStreak(
-  supabase: SupabaseClient<Database>,
+  supabase: SupabaseClient<Database, "public", any>,
   userId: string,
   todayKey = getTodayDateKey()
 ) {

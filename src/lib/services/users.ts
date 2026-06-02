@@ -1,8 +1,9 @@
-import type { SupabaseClient, User } from "@supabase/supabase-js";
+import type { User } from "@supabase/supabase-js";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { Database } from "@/types/database";
 
-export async function ensureUserProfile(supabase: SupabaseClient<Database>, authUser: User) {
+export async function ensureUserProfile(supabase: SupabaseClient<Database, "public", any>, authUser: User) {
   const { data: existing } = await supabase.from("users").select("*").eq("id", authUser.id).maybeSingle();
 
   if (existing) {
