@@ -52,7 +52,7 @@ export async function getDashboardData(supabase: SupabaseClient<Database, "publi
   if (leaderboardResult.error) throw new Error(leaderboardResult.error.message);
 
   const unlockedAchievementRows =
-    (userAchievementsResult.data ?? []) as Array<{ achievements: AchievementRow | null }>;
+    (userAchievementsResult.data ?? []) as unknown as Array<{ achievements: AchievementRow | null }>;
   const unlockedAchievements = unlockedAchievementRows
     .map((row) => row.achievements)
     .filter((achievement): achievement is AchievementRow => Boolean(achievement));
