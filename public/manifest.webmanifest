@@ -1,0 +1,17 @@
+{
+  "name": "Study Quest",
+  "short_name": "StudyQuest",
+  "description": "RPG leggero per trasformare lo studio in missioni, XP e streak.",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#0b1020",
+  "theme_color": "#6d5dfb",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
