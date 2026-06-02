@@ -4,6 +4,12 @@ import { getLevelInfo } from "@/lib/gamification";
 import { hasSupabaseConfig } from "@/lib/supabase/config";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
+type LeaderboardUser = {
+  id: string;
+  name: string;
+  total_xp: number;
+};
+
 export async function GET() {
   if (!hasSupabaseConfig()) {
     return NextResponse.json({ error: "Supabase non configurato." }, { status: 503 });
@@ -28,14 +34,15 @@ export async function GET() {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
+  const entries = (data ?? []) as LeaderboardUser[];
+
   return NextResponse.json({
-    leaderboard:
-      data?.map((entry, index) => ({
-        rank: index + 1,
-        id: entry.id,
-        name: entry.name,
-        level: getLevelInfo(entry.total_xp).level,
-        totalXp: entry.total_xp
-      })) ?? []
+    leaderboard: entries.map((entry, index) => ({
+      rank: index + 1,
+      id: entry.id,
+      name: entry.name,
+      level: getLevelInfo(entry.total_xp).level,
+      totalXp: entry.total_xp
+    }))
   });
 }
