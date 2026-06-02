@@ -1,4 +1,5 @@
-import type { SupabaseClient, User } from "@supabase/supabase-js";
+import type { User } from "@supabase/supabase-js";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { getDateRangeForKey, getTodayDateKey } from "@/lib/date";
 import { ACHIEVEMENT_RULES, getLevelInfo } from "@/lib/gamification";
@@ -7,7 +8,7 @@ import type { AchievementKey, AchievementRow, Database, MissionRow } from "@/typ
 
 export type DashboardData = Awaited<ReturnType<typeof getDashboardData>>;
 
-export async function getDashboardData(supabase: SupabaseClient<Database>, authUser: User) {
+export async function getDashboardData(supabase: SupabaseClient<Database, "public", any>, authUser: User) {
   const profile = await ensureUserProfile(supabase, authUser);
   const todayKey = getTodayDateKey();
   const { startIso, endIso } = getDateRangeForKey(todayKey);
