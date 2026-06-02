@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
-import type { SupabaseClient, CookieOptions } from "@supabase/supabase-js";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { CookieOptions } from "@supabase/ssr";
 
 import { getSupabaseConfig } from "@/lib/supabase/config";
 import type { Database } from "@/types/database";
