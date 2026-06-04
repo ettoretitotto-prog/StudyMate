@@ -16,16 +16,29 @@ export function useCountdown({ totalSeconds, startedAt }: UseCountdownInput) {
   const [remainingSeconds, setRemainingSeconds] = useState(initialRemaining);
 
   useEffect(() => {
-    if (remainingSeconds <= 0) {
-      return;
-    }
+    let mounted = true;
+
+    const updateRemaining = () => {
+      const elapsedSeconds = Math.floor((Date.now() - new Date(startedAt).getTime()) / 1000);
+      const remaining = Math.max(0, totalSeconds - elapsedSeconds);
+      if (mounted) setRemainingSeconds(remaining);
+      return remaining;
+    };
+
+    updateRemaining();
 
     const interval = window.setInterval(() => {
-      setRemainingSeconds((seconds) => Math.max(0, seconds - 1));
+      const rem = updateRemaining();
+      if (rem <= 0) {
+        window.clearInterval(interval);
+      }
     }, 1000);
 
-    return () => window.clearInterval(interval);
-  }, [remainingSeconds]);
+    return () => {
+      mounted = false;
+      window.clearInterval(interval);
+    };
+  }, [startedAt, totalSeconds]);
 
   const minutes = Math.floor(remainingSeconds / 60)
     .toString()

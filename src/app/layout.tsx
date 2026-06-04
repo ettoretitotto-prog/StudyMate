@@ -5,7 +5,7 @@ import { PwaRegister } from "@/components/pwa-register";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Study Quest",
+  title: "StudyMate",
   description: "Trasforma lo studio in missioni RPG, XP, livelli e streak.",
   manifest: "/manifest.webmanifest",
   icons: {
@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   },
   appleWebApp: {
     capable: true,
-    title: "Study Quest",
+    title: "StudyMate",
     statusBarStyle: "black-translucent"
   }
 };

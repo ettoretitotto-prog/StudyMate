@@ -1,6 +1,6 @@
 {
-  "name": "Study Quest",
-  "short_name": "StudyQuest",
+  "name": "StudyMate",
+  "short_name": "StudyMate",
   "description": "RPG leggero per trasformare lo studio in missioni, XP e streak.",
   "start_url": "/dashboard",
   "display": "standalone",
