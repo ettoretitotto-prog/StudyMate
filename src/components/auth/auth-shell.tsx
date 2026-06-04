@@ -16,7 +16,7 @@ export function AuthShell({ children }: AuthShellProps) {
             <BookOpenCheck className="h-6 w-6" aria-hidden="true" />
           </div>
           <div>
-            <p className="text-sm font-medium text-muted-foreground">Study Quest</p>
+            <p className="text-sm font-medium text-muted-foreground">StudyMate</p>
             <h1 className="text-4xl font-bold tracking-normal text-foreground sm:text-5xl">Entra nella tua quest</h1>
           </div>
         </div>

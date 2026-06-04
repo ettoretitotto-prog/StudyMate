@@ -1,4 +1,4 @@
-# Study Quest
+# StudyMate
 
 MVP Next.js 15 per trasformare lo studio in missioni RPG con XP, livelli, achievement, streak e leaderboard globale.
 

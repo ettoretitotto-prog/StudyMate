@@ -1,4 +1,4 @@
-const CACHE_NAME = "study-quest-v1";
+const CACHE_NAME = "study-mate-v1";
 const STATIC_ASSETS = ["/", "/dashboard", "/icon.svg", "/manifest.webmanifest"];
 
 self.addEventListener("install", (event) => {

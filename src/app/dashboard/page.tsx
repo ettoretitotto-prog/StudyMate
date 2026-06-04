@@ -38,7 +38,7 @@ export default async function DashboardPage() {
             <BookOpenCheck className="h-6 w-6" aria-hidden="true" />
           </div>
           <div>
-            <p className="text-sm text-muted-foreground">Study Quest</p>
+            <p className="text-sm text-muted-foreground">StudyMate</p>
             <h1 className="text-2xl font-bold tracking-normal">Ciao, {data.profile.name}</h1>
           </div>
         </div>
