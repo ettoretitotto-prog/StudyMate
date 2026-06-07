@@ -11,41 +11,64 @@ interface MarkmapPreviewProps {
 
 export function MarkmapPreview({ content, title }: MarkmapPreviewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const svgRef = useRef<SVGSVGElement | null>(null);
   const markmapRef = useRef<Markmap | null>(null);
 
   useEffect(() => {
-    if (!containerRef.current || !content.trim()) {
-      return;
+    if (!containerRef.current) return;
+
+    // Only render if there's actual content
+    const markdownContent = title ? `# ${title}\n${content}` : content;
+    if (!markdownContent.trim()) return;
+
+    // Ensure SVG element exists
+    let svg = svgRef.current;
+    if (!svg) {
+      svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      svg.setAttribute("style", "width: 100%; height: 100%;");
+      containerRef.current.innerHTML = "";
+      containerRef.current.appendChild(svg);
+      svgRef.current = svg;
     }
 
-    // Create transformer
-    const transformer = new Transformer();
-
     try {
-      // Prepare markdown with title
-      const markdownContent = title ? `# ${title}\n${content}` : content;
-
-      // Transform markdown to AST
+      const transformer = new Transformer();
       const { root } = transformer.transform(markdownContent);
 
-      // Initialize or update Markmap
-      if (!markmapRef.current && containerRef.current) {
-        markmapRef.current = new Markmap(containerRef.current);
+      if (!markmapRef.current) {
+        markmapRef.current = new Markmap(svg, null, root);
+      } else {
         markmapRef.current.setData(root);
-        markmapRef.current.fit();
-      } else if (markmapRef.current) {
-        markmapRef.current.setData(root);
-        markmapRef.current.fit();
       }
+
+      // Auto-fit after a short delay to ensure rendering
+      setTimeout(() => {
+        markmapRef.current?.fit();
+      }, 100);
+
+      // Apply white text color to SVG text elements
+      setTimeout(() => {
+        const textElements = svg?.querySelectorAll("text");
+        if (textElements) {
+          textElements.forEach((el) => {
+            el.setAttribute("fill", "white");
+            el.setAttribute("stroke", "none");
+            el.style.color = "white";
+          });
+        }
+      }, 150);
     } catch (error) {
       console.error("Error rendering markmap:", error);
+      if (containerRef.current) {
+        containerRef.current.innerHTML = '<div style="padding: 20px; color: #999;">Errore nel rendering della mappa</div>';
+      }
     }
   }, [content, title]);
 
   return (
     <div
       ref={containerRef}
-      className="h-full w-full bg-background"
+      className="h-full w-full bg-gradient-to-br from-background to-muted/20"
       style={{
         minHeight: "400px"
       }}

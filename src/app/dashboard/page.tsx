@@ -1,4 +1,5 @@
-import { BookOpenCheck, LogOut } from "lucide-react";
+import { BookOpenCheck, LogOut, Map } from "lucide-react";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { logoutAction } from "@/lib/actions/auth";
@@ -42,12 +43,20 @@ export default async function DashboardPage() {
             <h1 className="text-2xl font-bold tracking-normal">Ciao, {data.profile.name}</h1>
           </div>
         </div>
-        <form action={logoutAction}>
-          <Button variant="outline" size="sm">
-            <LogOut className="h-4 w-4" aria-hidden="true" />
-            Logout
-          </Button>
-        </form>
+        <div className="flex gap-2">
+          <Link href="/study-maps">
+            <Button variant="outline" size="sm">
+              <Map className="h-4 w-4 mr-2" aria-hidden="true" />
+              Study Maps
+            </Button>
+          </Link>
+          <form action={logoutAction}>
+            <Button variant="outline" size="sm">
+              <LogOut className="h-4 w-4" aria-hidden="true" />
+              Logout
+            </Button>
+          </form>
+        </div>
       </header>
 
       <div className="space-y-6">
