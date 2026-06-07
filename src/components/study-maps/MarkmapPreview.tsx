@@ -9,6 +9,21 @@ interface MarkmapPreviewProps {
   title?: string;
 }
 
+const MARKMAP_OPTIONS: Partial<Parameters<typeof Markmap.create>[1]> = {
+  style: () => `
+    .markmap {
+      --markmap-text-color: #ffffff;
+      --markmap-code-color: #ffffff;
+      --markmap-code-bg: rgba(255, 255, 255, 0.12);
+      color: #ffffff;
+    }
+    .markmap-foreign,
+    .markmap-foreign div {
+      color: #ffffff;
+    }
+  `,
+};
+
 export function MarkmapPreview({ content, title }: MarkmapPreviewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
@@ -36,8 +51,9 @@ export function MarkmapPreview({ content, title }: MarkmapPreviewProps) {
       const { root } = transformer.transform(markdownContent);
 
       if (!markmapRef.current) {
-        markmapRef.current = Markmap.create(svg, undefined, root);
+        markmapRef.current = Markmap.create(svg, MARKMAP_OPTIONS, root);
       } else {
+        markmapRef.current.setOptions(MARKMAP_OPTIONS);
         markmapRef.current.setData(root);
       }
 
@@ -45,18 +61,6 @@ export function MarkmapPreview({ content, title }: MarkmapPreviewProps) {
       setTimeout(() => {
         markmapRef.current?.fit();
       }, 100);
-
-      // Apply white text color to SVG text elements
-      setTimeout(() => {
-        const textElements = svg?.querySelectorAll("text");
-        if (textElements) {
-          textElements.forEach((el) => {
-            el.setAttribute("fill", "white");
-            el.setAttribute("stroke", "none");
-            el.style.color = "white";
-          });
-        }
-      }, 150);
     } catch (error) {
       console.error("Error rendering markmap:", error);
       if (containerRef.current) {
@@ -68,7 +72,7 @@ export function MarkmapPreview({ content, title }: MarkmapPreviewProps) {
   return (
     <div
       ref={containerRef}
-      className="h-full w-full bg-gradient-to-br from-background to-muted/20"
+      className="markmap-dark h-full w-full bg-gradient-to-br from-background to-muted/20"
       style={{
         minHeight: "400px"
       }}
