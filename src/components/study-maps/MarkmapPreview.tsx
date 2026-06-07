@@ -36,7 +36,7 @@ export function MarkmapPreview({ content, title }: MarkmapPreviewProps) {
       const { root } = transformer.transform(markdownContent);
 
       if (!markmapRef.current) {
-        markmapRef.current = Markmap.create(svg, null, root);
+        markmapRef.current = Markmap.create(svg, undefined, root);
       } else {
         markmapRef.current.setData(root);
       }
