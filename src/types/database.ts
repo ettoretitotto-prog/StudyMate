@@ -68,6 +68,15 @@ export type StreakRow = {
   updated_at: string;
 };
 
+export type StudyMapRow = {
+  id: string;
+  user_id: string;
+  title: string;
+  content: string;
+  created_at: string;
+  updated_at: string;
+};
+
 export interface Database {
   public: {
     Tables: {
@@ -200,6 +209,27 @@ export interface Database {
             foreignKeyName: "streaks_user_id_fkey";
             columns: ["user_id"];
             isOneToOne: true;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      study_maps: {
+        Row: StudyMapRow;
+        Insert: {
+          id?: string;
+          user_id: string;
+          title: string;
+          content?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Omit<StudyMapRow, "id" | "user_id" | "created_at">>;
+        Relationships: [
+          {
+            foreignKeyName: "study_maps_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
             referencedRelation: "users";
             referencedColumns: ["id"];
           }

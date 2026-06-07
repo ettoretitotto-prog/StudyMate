@@ -251,3 +251,46 @@ on public.streaks for update
 to authenticated
 using (auth.uid() = user_id)
 with check (auth.uid() = user_id);
+
+create table if not exists public.study_maps (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references public.users(id) on delete cascade,
+  title text not null,
+  content text not null default '',
+  created_at timestamptz not null default timezone('utc', now()),
+  updated_at timestamptz not null default timezone('utc', now())
+);
+
+create index if not exists study_maps_user_created_idx on public.study_maps(user_id, created_at desc);
+
+drop trigger if exists set_study_maps_updated_at on public.study_maps;
+create trigger set_study_maps_updated_at
+before update on public.study_maps
+for each row execute function public.set_updated_at();
+
+alter table public.study_maps enable row level security;
+
+drop policy if exists "Users can read own study maps" on public.study_maps;
+create policy "Users can read own study maps"
+on public.study_maps for select
+to authenticated
+using (auth.uid() = user_id);
+
+drop policy if exists "Users can insert own study maps" on public.study_maps;
+create policy "Users can insert own study maps"
+on public.study_maps for insert
+to authenticated
+with check (auth.uid() = user_id);
+
+drop policy if exists "Users can update own study maps" on public.study_maps;
+create policy "Users can update own study maps"
+on public.study_maps for update
+to authenticated
+using (auth.uid() = user_id)
+with check (auth.uid() = user_id);
+
+drop policy if exists "Users can delete own study maps" on public.study_maps;
+create policy "Users can delete own study maps"
+on public.study_maps for delete
+to authenticated
+using (auth.uid() = user_id);
