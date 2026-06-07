@@ -6,17 +6,17 @@ import { saveGameSession, awardGameXP } from "@/lib/services/games";
 
 export async function POST(request: Request) {
   const { studyMapId, score, timeSeconds, xpAwarded } = await request.json();
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const supabase = createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
         get: (name: string) => cookieStore.get(name)?.value,
-        set: (name: string, value: string, options: object) => {
+        set: (name: string, value: string, options: any) => {
           cookieStore.set(name, value, options);
         },
-        remove: (name: string, options: object) => {
+        remove: (name: string, options: any) => {
           cookieStore.set(name, "", options);
         },
       },
@@ -31,7 +31,7 @@ export async function POST(request: Request) {
 
   try {
     const session = await saveGameSession(
-      supabase,
+      supabase as any,
       user.user.id,
       studyMapId,
       score,
@@ -41,7 +41,7 @@ export async function POST(request: Request) {
 
     if (session) {
       // Aggiorna anche gli XP dell'utente nel profilo
-      await awardGameXP(supabase, user.user.id, xpAwarded);
+      await awardGameXP(supabase as any, user.user.id, xpAwarded);
       return NextResponse.json(session, { status: 201 });
     } else {
       return NextResponse.json({ error: "Failed to save game session" }, { status: 500 });
