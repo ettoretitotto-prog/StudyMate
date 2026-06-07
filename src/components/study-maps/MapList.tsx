@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Trash2 } from "lucide-react";
+import Link from "next/link";
+import { Trash2, Gamepad2 } from "lucide-react";
 import type { StudyMapRow } from "@/types/database";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -56,15 +57,27 @@ export function MapList({ maps, selectedMapId, onSelectMap, onDeleteMap, isLoadi
               })}
             </p>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={(e) => handleDelete(map.id, e)}
-            disabled={deletingId === map.id || isLoading}
-            className="ml-2 h-8 w-8 p-0"
-          >
-            <Trash2 className="h-4 w-4" aria-hidden="true" />
-          </Button>
+          <div className="flex items-center gap-1">
+            <Link href={`/games/${map.id}`} passHref>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0"
+                aria-label="Gioca con la mappa"
+              >
+                <Gamepad2 className="h-4 w-4" />
+              </Button>
+            </Link>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={(e) => handleDelete(map.id, e)}
+              disabled={deletingId === map.id || isLoading}
+              className="h-8 w-8 p-0"
+            >
+              <Trash2 className="h-4 w-4" aria-hidden="true" />
+            </Button>
+          </div>
         </Card>
       ))}
     </div>

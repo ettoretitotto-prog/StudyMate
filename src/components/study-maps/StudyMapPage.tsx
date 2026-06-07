@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { Plus } from "lucide-react";
 import type { StudyMapRow } from "@/types/database";
 import { Button } from "@/components/ui/button";
@@ -118,7 +119,14 @@ export function StudyMapPage({ initialMaps }: StudyMapPageProps) {
       {/* Sidebar */}
       <div className="flex flex-col border-r bg-muted/30">
         <div className="space-y-3 border-b p-4">
-          <h2 className="text-lg font-semibold">Le mie mappe</h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold">Le mie mappe</h2>
+            <Link href="/dashboard" passHref>
+              <Button variant="outline" size="sm">
+                Home
+              </Button>
+            </Link>
+          </div>
           <Button onClick={handleCreateMap} disabled={isLoading} className="w-full">
             <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
             Nuova Mappa

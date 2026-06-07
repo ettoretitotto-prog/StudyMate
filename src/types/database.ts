@@ -3,6 +3,7 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 export type MissionStatus = "ready" | "completed" | "archived";
 export type StudySessionStatus = "active" | "completed" | "failed";
 export type AchievementKey = "first_step" | "serious_student" | "xp_100_club" | "level_up";
+export type GameType = "drag_drop";
 
 export type UserRow = {
   id: string;
@@ -73,6 +74,19 @@ export type StudyMapRow = {
   user_id: string;
   title: string;
   content: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export type GameSessionRow = {
+  id: string;
+  user_id: string;
+  study_map_id: string;
+  game_type: GameType;
+  score: number;
+  time_seconds: number;
+  completed: boolean;
+  xp_awarded: number;
   created_at: string;
   updated_at: string;
 };
@@ -231,6 +245,38 @@ export interface Database {
             columns: ["user_id"];
             isOneToOne: false;
             referencedRelation: "users";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      game_sessions: {
+        Row: GameSessionRow;
+        Insert: {
+          id?: string;
+          user_id: string;
+          study_map_id: string;
+          game_type: GameType;
+          score: number;
+          time_seconds: number;
+          completed?: boolean;
+          xp_awarded?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Omit<GameSessionRow, "id" | "user_id" | "study_map_id" | "created_at">>;
+        Relationships: [
+          {
+            foreignKeyName: "game_sessions_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "game_sessions_study_map_id_fkey";
+            columns: ["study_map_id"];
+            isOneToOne: false;
+            referencedRelation: "study_maps";
             referencedColumns: ["id"];
           }
         ];

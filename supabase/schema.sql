@@ -294,3 +294,45 @@ create policy "Users can delete own study maps"
 on public.study_maps for delete
 to authenticated
 using (auth.uid() = user_id);
+
+create table if not exists public.game_sessions (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references public.users(id) on delete cascade,
+  study_map_id uuid not null references public.study_maps(id) on delete cascade,
+  game_type text not null check (game_type in ('drag_drop')),
+  score integer not null check (score >= 0 and score <= 100),
+  time_seconds integer not null check (time_seconds >= 0),
+  completed boolean not null default false,
+  xp_awarded integer not null default 0 check (xp_awarded >= 0),
+  created_at timestamptz not null default timezone('utc', now()),
+  updated_at timestamptz not null default timezone('utc', now())
+);
+
+create index if not exists game_sessions_user_map_idx on public.game_sessions(user_id, study_map_id, created_at desc);
+create index if not exists game_sessions_score_idx on public.game_sessions(study_map_id, score desc);
+
+drop trigger if exists set_game_sessions_updated_at on public.game_sessions;
+create trigger set_game_sessions_updated_at
+before update on public.game_sessions
+for each row execute function public.set_updated_at();
+
+alter table public.game_sessions enable row level security;
+
+drop policy if exists "Users can read own game sessions" on public.game_sessions;
+create policy "Users can read own game sessions"
+on public.game_sessions for select
+to authenticated
+using (auth.uid() = user_id);
+
+drop policy if exists "Users can insert own game sessions" on public.game_sessions;
+create policy "Users can insert own game sessions"
+on public.game_sessions for insert
+to authenticated
+with check (auth.uid() = user_id);
+
+drop policy if exists "Users can update own game sessions" on public.game_sessions;
+create policy "Users can update own game sessions"
+on public.game_sessions for update
+to authenticated
+using (auth.uid() = user_id)
+with check (auth.uid() = user_id);
