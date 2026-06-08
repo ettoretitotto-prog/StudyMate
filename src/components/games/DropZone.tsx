@@ -2,7 +2,7 @@
 
 import { useDroppable } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
-import { MinusCircle } from "lucide-react";
+import { MinusCircle, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { DragDropGameData, UserTreeNode, ShuffledNode } from "@/lib/services/games";
 
@@ -11,6 +11,8 @@ interface DropZoneProps {
   gameData: DragDropGameData;
   onRemoveNode: (nodeId: string) => void;
   availableNodes: ShuffledNode[];
+  selectedNodeId?: string | null;
+  onSlotClick?: (slotNodeId: string, expectedNodeId: string, parentId: string | null, level: number) => void;
 }
 
 function NodeSlot({
@@ -21,6 +23,8 @@ function NodeSlot({
   userPlacedNodeId,
   onRemove,
   allShuffledNodes,
+  selectedNodeId,
+  onSlotClick,
 }: {
   nodeId: string;
   correctParentId: string | null;
@@ -29,6 +33,8 @@ function NodeSlot({
   userPlacedNodeId: string | null;
   onRemove: (id: string) => void;
   allShuffledNodes: ShuffledNode[];
+  selectedNodeId?: string | null;
+  onSlotClick?: (slotNodeId: string, expectedNodeId: string, parentId: string | null, level: number) => void;
 }) {
   const { setNodeRef, isOver } = useDroppable({
     id: `slot-${nodeId}`,
@@ -46,7 +52,7 @@ function NodeSlot({
   return (
     <div className="space-y-2">
       <div className="relative flex items-center gap-2 group">
-        {/* Linea di connessione visiva - Ridotta su mobile */}
+        {/* Connection line */}
         {level > 0 && (
           <div 
             className="absolute border-l-2 border-b-2 border-primary/20 h-8 w-4 -left-4 -top-4 rounded-bl-md lg:h-10 lg:w-6 lg:-left-6 lg:-top-5"
@@ -56,9 +62,15 @@ function NodeSlot({
         <div
           ref={setNodeRef}
           style={{ marginLeft: `${level * 20}px` }}
+          onClick={() => {
+            if (onSlotClick && !userNode) {
+              onSlotClick(nodeId, nodeId, correctParentId, level);
+            }
+          }}
           className={cn(
             "min-w-[140px] max-w-[300px] min-h-[44px] lg:min-w-[180px] lg:max-w-[400px] lg:min-h-[50px] rounded-lg border-2 p-2 lg:p-3 text-xs lg:text-sm font-semibold transition-all flex items-center justify-between",
-            !userNode && "border-dashed border-muted-foreground/30 bg-muted/10 text-transparent",
+            !userNode && "border-dashed border-muted-foreground/30 bg-muted/10 text-transparent cursor-pointer",
+            !userNode && selectedNodeId && "hover:bg-primary/5 hover:border-primary/50 animate-pulse",
             userNode && "border-solid shadow-md",
             userNode && level === 0 && "bg-primary text-primary-foreground border-primary shadow-primary/20",
             userNode && level === 1 && "bg-secondary text-secondary-foreground border-secondary",
@@ -81,7 +93,12 @@ function NodeSlot({
               </button>
             </>
           ) : (
-            <span className="text-muted-foreground/50 text-[10px] lg:text-xs italic truncate">Trascina qui...</span>
+            <span className={cn(
+              "text-xs italic truncate",
+              selectedNodeId ? "text-primary font-medium" : "text-muted-foreground/50"
+            )}>
+              {selectedNodeId ? "Seleziona questo slot..." : "Trascina qui..."}
+            </span>
           )}
         </div>
       </div>
@@ -89,7 +106,13 @@ function NodeSlot({
   );
 }
 
-export function DropZone({ userTree, gameData, onRemoveNode }: DropZoneProps) {
+export function DropZone({ 
+  userTree, 
+  gameData, 
+  onRemoveNode, 
+  selectedNodeId, 
+  onSlotClick 
+}: DropZoneProps) {
   const renderStructure = (shuffledNodes: ShuffledNode[], parentId: string | null = null, level = 0) => {
     const children = shuffledNodes.filter((n) => n.correctParentId === parentId);
     
@@ -112,6 +135,8 @@ export function DropZone({ userTree, gameData, onRemoveNode }: DropZoneProps) {
             userPlacedNodeId={userAssignment ? userAssignment.id : null}
             onRemove={onRemoveNode}
             allShuffledNodes={gameData.shuffledNodes}
+            selectedNodeId={selectedNodeId}
+            onSlotClick={onSlotClick}
           />
           {renderStructure(shuffledNodes, node.id, level + 1)}
         </div>
@@ -124,7 +149,9 @@ export function DropZone({ userTree, gameData, onRemoveNode }: DropZoneProps) {
       <div className="min-h-full space-y-4 p-4 lg:space-y-6 lg:p-8 border rounded-xl lg:rounded-2xl bg-card shadow-inner max-w-4xl mx-auto">
         <div className="mb-4 lg:mb-6">
           <h2 className="text-lg lg:text-xl font-bold text-foreground mb-1">Struttura</h2>
-          <p className="text-xs lg:text-sm text-muted-foreground">Ricostruisci la logica della mappa.</p>
+          <p className="text-xs lg:text-sm text-muted-foreground">
+            {selectedNodeId ? "Clicca sullo slot vuoto corretto per posizionare il nodo selezionato." : "Trascina i nodi qui o clicca su un nodo e poi sullo slot per posizionarlo."}
+          </p>
         </div>
         
         <div className="flex flex-col gap-2 lg:gap-4 overflow-x-auto pb-4">

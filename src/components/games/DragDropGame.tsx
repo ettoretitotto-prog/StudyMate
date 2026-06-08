@@ -7,7 +7,6 @@ import {
   DragOverlay,
   DragStartEvent,
   PointerSensor,
-  TouchSensor,
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
@@ -34,6 +33,7 @@ export function DragDropGame({ gameData, onComplete, onRestart }: DragDropGamePr
   const [timeSeconds, setTimeSeconds] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
   const [activeMobileTab, setActiveMobileTab] = useState<"nodes" | "dropzone">("nodes");
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [gameResult, setGameResult] = useState<{
     score: number;
     xpAwarded: number;
@@ -41,16 +41,11 @@ export function DragDropGame({ gameData, onComplete, onRestart }: DragDropGamePr
     totalNodes: number;
   } | null>(null);
 
+  // Solo PointerSensor per evitare problemi con TouchSensor e scroll su computer/mobile
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
         distance: 8,
-      },
-    }),
-    useSensor(TouchSensor, {
-      activationConstraint: {
-        delay: 250,
-        tolerance: 5,
       },
     })
   );
@@ -104,7 +99,36 @@ export function DragDropGame({ gameData, onComplete, onRestart }: DragDropGamePr
     if (node) {
       setAvailableNodes((prev) => [...prev, node]);
     }
-  }, [gameData.shuffledNodes]);
+    if (selectedNodeId === nodeId) {
+      setSelectedNodeId(null);
+    }
+  }, [gameData.shuffledNodes, selectedNodeId]);
+
+  const handleNodeClick = (nodeId: string) => {
+    setSelectedNodeId((prev) => (prev === nodeId ? null : nodeId));
+  };
+
+  const handleSlotClick = (slotNodeId: string, expectedNodeId: string, parentId: string | null, level: number) => {
+    if (!selectedNodeId) return;
+
+    // Se il nodo selezionato corrisponde a quello previsto per questo slot
+    if (selectedNodeId === expectedNodeId) {
+      setAvailableNodes((prev) => prev.filter((n) => n.id !== selectedNodeId));
+      setUserTree((prev) => [
+        ...prev,
+        {
+          id: selectedNodeId,
+          parentId: parentId,
+          level: level,
+        },
+      ]);
+      setSelectedNodeId(null);
+    } else {
+      console.log("Nodo errato per questo slot!");
+      // Deseleziona per feedback visivo di errore
+      setSelectedNodeId(null);
+    }
+  };
 
   const handleVerify = () => {
     const validation = validateNodePlacement(userTree, gameData);
@@ -130,6 +154,7 @@ export function DragDropGame({ gameData, onComplete, onRestart }: DragDropGamePr
     setTimeSeconds(0);
     setIsComplete(false);
     setGameResult(null);
+    setSelectedNodeId(null);
     onRestart();
   };
 
@@ -213,6 +238,9 @@ export function DragDropGame({ gameData, onComplete, onRestart }: DragDropGamePr
             {activeMobileTab === "nodes" ? (
               <div className="space-y-3">
                 <h2 className="text-lg font-semibold">Nodi Disponibili</h2>
+                <p className="text-xs text-muted-foreground">
+                  Clicca su un nodo per selezionarlo, poi vai alla scheda "Struttura" e tocca lo slot desiderato.
+                </p>
                 <div className="grid grid-cols-1 gap-2">
                   {availableNodes.length === 0 ? (
                     <Card className="p-8 text-center text-muted-foreground">
@@ -220,7 +248,13 @@ export function DragDropGame({ gameData, onComplete, onRestart }: DragDropGamePr
                     </Card>
                   ) : (
                     availableNodes.map((node) => (
-                      <DraggableNode key={node.id} id={node.id} text={node.text} />
+                      <DraggableNode 
+                        key={node.id} 
+                        id={node.id} 
+                        text={node.text} 
+                        onClick={() => handleNodeClick(node.id)}
+                        isSelected={selectedNodeId === node.id}
+                      />
                     ))
                   )}
                 </div>
@@ -231,6 +265,8 @@ export function DragDropGame({ gameData, onComplete, onRestart }: DragDropGamePr
                 gameData={gameData}
                 onRemoveNode={handleRemoveNode}
                 availableNodes={availableNodes}
+                selectedNodeId={selectedNodeId}
+                onSlotClick={handleSlotClick}
               />
             )}
           </div>
@@ -246,15 +282,18 @@ export function DragDropGame({ gameData, onComplete, onRestart }: DragDropGamePr
               onClick={() => setActiveMobileTab("dropzone")}
               className={`flex h-16 items-center justify-center gap-2 font-medium transition-colors ${activeMobileTab === "dropzone" ? "bg-muted text-primary" : "text-muted-foreground"}`}
             >
-              <Layout className="h-5 w-5" /> Struttura
+              <Layout className="h-5 w-5" /> Struttura {selectedNodeId && <span className="h-2 w-2 rounded-full bg-primary animate-ping" />}
             </button>
           </div>
         </div>
 
-        {/* Area di gioco Desktop: Two Panels */}
+        {/* Area di gioco Desktop: Two Panels (With both Drag & Drop AND Click-to-Select supported) */}
         <div className="hidden flex-1 overflow-hidden lg:flex">
           <div className="w-80 border-r bg-muted/20 p-4 overflow-y-auto">
-            <h2 className="mb-4 text-lg font-semibold">Nodi Disponibili</h2>
+            <h2 className="mb-2 text-lg font-semibold">Nodi Disponibili</h2>
+            <p className="mb-4 text-xs text-muted-foreground">
+              Puoi trascinare i nodi oppure cliccare su un nodo e poi sullo slot desiderato.
+            </p>
             <div className="space-y-2">
               {availableNodes.length === 0 ? (
                 <Card className="p-4 text-center text-sm text-muted-foreground">
@@ -262,7 +301,13 @@ export function DragDropGame({ gameData, onComplete, onRestart }: DragDropGamePr
                 </Card>
               ) : (
                 availableNodes.map((node) => (
-                  <DraggableNode key={node.id} id={node.id} text={node.text} />
+                  <DraggableNode 
+                    key={node.id} 
+                    id={node.id} 
+                    text={node.text} 
+                    onClick={() => handleNodeClick(node.id)}
+                    isSelected={selectedNodeId === node.id}
+                  />
                 ))
               )}
             </div>
@@ -274,6 +319,8 @@ export function DragDropGame({ gameData, onComplete, onRestart }: DragDropGamePr
               gameData={gameData}
               onRemoveNode={handleRemoveNode}
               availableNodes={availableNodes}
+              selectedNodeId={selectedNodeId}
+              onSlotClick={handleSlotClick}
             />
           </div>
         </div>
@@ -301,7 +348,7 @@ export function DragDropGame({ gameData, onComplete, onRestart }: DragDropGamePr
 
       <DragOverlay dropAnimation={null}>
         {activeNode ? (
-          <Card className="cursor-grabbing border-2 border-primary bg-background p-3 shadow-lg max-w-[280px]">
+          <Card className="border-2 border-primary bg-background p-3 shadow-lg max-w-[280px]">
             <p className="font-medium text-sm">{activeNode.text}</p>
           </Card>
         ) : null}
