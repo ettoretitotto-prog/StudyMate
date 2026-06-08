@@ -7,11 +7,12 @@ import {
   DragOverlay,
   DragStartEvent,
   PointerSensor,
+  TouchSensor,
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
 import Link from "next/link";
-import { Trophy, Clock, Target, RotateCcw } from "lucide-react";
+import { Trophy, Clock, Target, RotateCcw, Layout, Menu, Home, X } from "lucide-react";
 import type { DragDropGameData, UserTreeNode } from "@/lib/services/games";
 import { validateNodePlacement, calculateGameScore } from "@/lib/services/games";
 import { Button } from "@/components/ui/button";
@@ -32,6 +33,7 @@ export function DragDropGame({ gameData, onComplete, onRestart }: DragDropGamePr
   const [activeId, setActiveId] = useState<string | null>(null);
   const [timeSeconds, setTimeSeconds] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
+  const [activeMobileTab, setActiveMobileTab] = useState<"nodes" | "dropzone">("nodes");
   const [gameResult, setGameResult] = useState<{
     score: number;
     xpAwarded: number;
@@ -43,6 +45,12 @@ export function DragDropGame({ gameData, onComplete, onRestart }: DragDropGamePr
     useSensor(PointerSensor, {
       activationConstraint: {
         distance: 8,
+      },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 250,
+        tolerance: 5,
       },
     })
   );
@@ -69,7 +77,6 @@ export function DragDropGame({ gameData, onComplete, onRestart }: DragDropGamePr
     if (!over) return;
 
     const nodeId = active.id as string;
-    // Nel nuovo sistema, usiamo expectedNodeId per validare se il nodo trascinato è quello giusto per quello slot
     const dropZoneData = over.data.current as { 
       parentId: string | null; 
       level: number;
@@ -78,12 +85,8 @@ export function DragDropGame({ gameData, onComplete, onRestart }: DragDropGamePr
 
     if (!dropZoneData) return;
 
-    // Se l'utente trascina il nodo nello slot corretto
     if (nodeId === dropZoneData.expectedNodeId) {
-      // Rimuovi il nodo dai disponibili
       setAvailableNodes((prev) => prev.filter((n) => n.id !== nodeId));
-
-      // Aggiungi il nodo all'albero dell'utente
       setUserTree((prev) => [
         ...prev,
         {
@@ -92,17 +95,11 @@ export function DragDropGame({ gameData, onComplete, onRestart }: DragDropGamePr
           level: dropZoneData.level,
         },
       ]);
-    } else {
-      // Opzionale: feedback visivo di errore (vibrazione o suono se possibile, qui facciamo nulla per ora)
-      console.log("Nodo errato per questo slot!");
     }
   };
 
   const handleRemoveNode = useCallback((nodeId: string) => {
-    // Rimuovi il nodo dall'albero dell'utente
     setUserTree((prev) => prev.filter((n) => n.id !== nodeId));
-
-    // Aggiungi il nodo di nuovo ai disponibili
     const node = gameData.shuffledNodes.find((n) => n.id === nodeId);
     if (node) {
       setAvailableNodes((prev) => [...prev, node]);
@@ -157,55 +154,106 @@ export function DragDropGame({ gameData, onComplete, onRestart }: DragDropGamePr
     );
   }
 
+  const Header = (
+    <div className="border-b bg-muted/30 px-4 py-3 lg:px-6 lg:py-4">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <Link href="/dashboard" passHref>
+              <Button variant="outline" size="sm" className="h-8 w-8 p-0 lg:h-9 lg:w-auto lg:px-3">
+                <Home className="h-4 w-4" />
+                <span className="ml-2 hidden lg:inline">Home</span>
+              </Button>
+            </Link>
+            <Link href="/study-maps" passHref>
+              <Button variant="outline" size="sm" className="h-8 w-8 p-0 lg:h-9 lg:w-auto lg:px-3">
+                <Layout className="h-4 w-4" />
+                <span className="ml-2 hidden lg:inline">Mappe</span>
+              </Button>
+            </Link>
+          </div>
+          <div className="text-right lg:text-left">
+            <h1 className="text-lg font-bold leading-tight lg:text-2xl">{gameData.mapTitle}</h1>
+            <p className="hidden text-sm text-muted-foreground lg:block">
+              Ricostruisci la gerarchia della mappa
+            </p>
+          </div>
+        </div>
+        
+        <div className="flex items-center justify-between border-t pt-3 lg:border-t-0 lg:pt-0 lg:gap-6">
+          <div className="flex items-center gap-2">
+            <Clock className="h-4 w-4 text-muted-foreground lg:h-5 lg:w-5" />
+            <span className="text-base font-mono font-semibold lg:text-lg">
+              {formatTime(timeSeconds)}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Target className="h-4 w-4 text-muted-foreground lg:h-5 lg:w-5" />
+            <span className="text-base font-semibold lg:text-lg">
+              {userTree.length}/{gameData.shuffledNodes.length}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <DndContext
       sensors={sensors}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <div className="flex h-screen flex-col">
-        {/* Header con statistiche */}
-        <div className="border-b bg-muted/30 px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Link href="/dashboard" passHref>
-                <Button variant="outline" size="sm">
-                  Home
-                </Button>
-              </Link>
-              <Link href="/study-maps" passHref>
-                <Button variant="outline" size="sm">
-                  Mappe
-                </Button>
-              </Link>
-              <div>
-                <h1 className="text-2xl font-bold">{gameData.mapTitle}</h1>
-                <p className="text-sm text-muted-foreground">
-                  Ricostruisci la gerarchia della mappa
-                </p>
+      <div className="flex h-screen flex-col overflow-hidden">
+        {Header}
+
+        {/* Area di gioco Mobile: Tabbed View */}
+        <div className="flex flex-1 flex-col overflow-hidden lg:hidden">
+          <div className="flex-1 overflow-auto p-4">
+            {activeMobileTab === "nodes" ? (
+              <div className="space-y-3">
+                <h2 className="text-lg font-semibold">Nodi Disponibili</h2>
+                <div className="grid grid-cols-1 gap-2">
+                  {availableNodes.length === 0 ? (
+                    <Card className="p-8 text-center text-muted-foreground">
+                      Tutti i nodi posizionati! Passa alla struttura per verificare.
+                    </Card>
+                  ) : (
+                    availableNodes.map((node) => (
+                      <DraggableNode key={node.id} id={node.id} text={node.text} />
+                    ))
+                  )}
+                </div>
               </div>
-            </div>
-            <div className="flex items-center gap-6">
-              <div className="flex items-center gap-2">
-                <Clock className="h-5 w-5 text-muted-foreground" />
-                <span className="text-lg font-mono font-semibold">
-                  {formatTime(timeSeconds)}
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Target className="h-5 w-5 text-muted-foreground" />
-                <span className="text-lg font-semibold">
-                  {userTree.length}/{gameData.shuffledNodes.length}
-                </span>
-              </div>
-            </div>
+            ) : (
+              <DropZone
+                userTree={userTree}
+                gameData={gameData}
+                onRemoveNode={handleRemoveNode}
+                availableNodes={availableNodes}
+              />
+            )}
+          </div>
+
+          <div className="grid w-full grid-cols-2 border-t bg-background">
+            <button
+              onClick={() => setActiveMobileTab("nodes")}
+              className={`flex h-16 items-center justify-center gap-2 font-medium transition-colors ${activeMobileTab === "nodes" ? "bg-muted text-primary" : "text-muted-foreground"}`}
+            >
+              <Menu className="h-5 w-5" /> Nodi ({availableNodes.length})
+            </button>
+            <button
+              onClick={() => setActiveMobileTab("dropzone")}
+              className={`flex h-16 items-center justify-center gap-2 font-medium transition-colors ${activeMobileTab === "dropzone" ? "bg-muted text-primary" : "text-muted-foreground"}`}
+            >
+              <Layout className="h-5 w-5" /> Struttura
+            </button>
           </div>
         </div>
 
-        {/* Area di gioco */}
-        <div className="flex flex-1 overflow-hidden">
-          {/* Pannello sinistro: nodi disponibili */}
-          <div className="w-80 border-r bg-muted/20 p-4">
+        {/* Area di gioco Desktop: Two Panels */}
+        <div className="hidden flex-1 overflow-hidden lg:flex">
+          <div className="w-80 border-r bg-muted/20 p-4 overflow-y-auto">
             <h2 className="mb-4 text-lg font-semibold">Nodi Disponibili</h2>
             <div className="space-y-2">
               {availableNodes.length === 0 ? (
@@ -220,7 +268,6 @@ export function DragDropGame({ gameData, onComplete, onRestart }: DragDropGamePr
             </div>
           </div>
 
-          {/* Pannello centrale: area di costruzione */}
           <div className="flex-1 overflow-auto p-6">
             <DropZone
               userTree={userTree}
@@ -232,28 +279,30 @@ export function DragDropGame({ gameData, onComplete, onRestart }: DragDropGamePr
         </div>
 
         {/* Footer con azioni */}
-        <div className="border-t bg-muted/30 px-6 py-4">
-          <div className="flex items-center justify-between">
-            <Button variant="outline" onClick={handleRestart}>
+        <div className="border-t bg-muted/30 px-4 py-3 lg:px-6 lg:py-4">
+          <div className="flex items-center justify-between gap-4">
+            <Button variant="outline" size="sm" onClick={handleRestart} className="lg:size-default">
               <RotateCcw className="mr-2 h-4 w-4" />
-              Ricomincia
+              <span className="hidden sm:inline">Ricomincia</span>
+              <span className="sm:hidden">Reset</span>
             </Button>
             <Button
               onClick={handleVerify}
               disabled={userTree.length !== gameData.shuffledNodes.length}
+              className="flex-1 lg:flex-none"
               size="lg"
             >
               <Trophy className="mr-2 h-5 w-5" />
-              Verifica Risultato
+              Verifica
             </Button>
           </div>
         </div>
       </div>
 
-      <DragOverlay>
+      <DragOverlay dropAnimation={null}>
         {activeNode ? (
-          <Card className="cursor-grabbing border-2 border-primary bg-background p-3 shadow-lg">
-            <p className="font-medium">{activeNode.text}</p>
+          <Card className="cursor-grabbing border-2 border-primary bg-background p-3 shadow-lg max-w-[280px]">
+            <p className="font-medium text-sm">{activeNode.text}</p>
           </Card>
         ) : null}
       </DragOverlay>

@@ -30,13 +30,12 @@ function NodeSlot({
   onRemove: (id: string) => void;
   allShuffledNodes: ShuffledNode[];
 }) {
-  // Il droppable ID è legato alla posizione strutturale fissa (il nodeId originale)
   const { setNodeRef, isOver } = useDroppable({
     id: `slot-${nodeId}`,
     data: { 
       parentId: correctParentId, 
       level: level,
-      expectedNodeId: nodeId // Informazione extra per debug/validazione se servisse
+      expectedNodeId: nodeId 
     },
   });
 
@@ -47,19 +46,19 @@ function NodeSlot({
   return (
     <div className="space-y-2">
       <div className="relative flex items-center gap-2 group">
-        {/* Linea di connessione visiva */}
+        {/* Linea di connessione visiva - Ridotta su mobile */}
         {level > 0 && (
           <div 
-            className="absolute border-l-2 border-b-2 border-primary/20 h-10 w-6 -left-6 -top-5 rounded-bl-md"
+            className="absolute border-l-2 border-b-2 border-primary/20 h-8 w-4 -left-4 -top-4 rounded-bl-md lg:h-10 lg:w-6 lg:-left-6 lg:-top-5"
           />
         )}
         
         <div
           ref={setNodeRef}
-          style={{ marginLeft: `${level * 40}px` }}
+          style={{ marginLeft: `${level * 20}px` }}
           className={cn(
-            "min-w-[180px] max-w-[400px] min-h-[50px] rounded-lg border-2 p-3 text-sm font-semibold transition-all flex items-center justify-between",
-            !userNode && "border-dashed border-muted-foreground/30 bg-muted/20 text-transparent",
+            "min-w-[140px] max-w-[300px] min-h-[44px] lg:min-w-[180px] lg:max-w-[400px] lg:min-h-[50px] rounded-lg border-2 p-2 lg:p-3 text-xs lg:text-sm font-semibold transition-all flex items-center justify-between",
+            !userNode && "border-dashed border-muted-foreground/30 bg-muted/10 text-transparent",
             userNode && "border-solid shadow-md",
             userNode && level === 0 && "bg-primary text-primary-foreground border-primary shadow-primary/20",
             userNode && level === 1 && "bg-secondary text-secondary-foreground border-secondary",
@@ -69,17 +68,20 @@ function NodeSlot({
         >
           {userNode ? (
             <>
-              <span>{userNode.text}</span>
+              <span className="truncate pr-2">{userNode.text}</span>
               <button
-                onClick={() => onRemove(userNode.id)}
-                className="ml-2 rounded-full bg-destructive text-destructive-foreground opacity-0 group-hover:opacity-100 transition-opacity p-0.5 shadow-sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onRemove(userNode.id);
+                }}
+                className="flex-shrink-0 rounded-full bg-destructive text-destructive-foreground p-1 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity shadow-sm"
                 aria-label="Rimuovi"
               >
-                <MinusCircle className="h-4 w-4" />
+                <MinusCircle className="h-3 w-3 lg:h-4 lg:w-4" />
               </button>
             </>
           ) : (
-            <span className="text-muted-foreground/50 text-xs italic">Trascina qui...</span>
+            <span className="text-muted-foreground/50 text-[10px] lg:text-xs italic truncate">Trascina qui...</span>
           )}
         </div>
       </div>
@@ -88,12 +90,9 @@ function NodeSlot({
 }
 
 export function DropZone({ userTree, gameData, onRemoveNode }: DropZoneProps) {
-  // Renderizziamo la struttura FISSA della mappa originale, ma con i contenuti vuoti (Slot)
   const renderStructure = (shuffledNodes: ShuffledNode[], parentId: string | null = null, level = 0) => {
-    // Troviamo i nodi che dovrebbero stare qui in base alla struttura corretta
     const children = shuffledNodes.filter((n) => n.correctParentId === parentId);
     
-    // Ordiniamo per mantenere l'aspetto originale della mappa
     children.sort((a, b) => {
        const idxA = gameData.correctTree.relations.findIndex(r => r.to === a.id);
        const idxB = gameData.correctTree.relations.findIndex(r => r.to === b.id);
@@ -101,15 +100,10 @@ export function DropZone({ userTree, gameData, onRemoveNode }: DropZoneProps) {
     });
 
     return children.map((node) => {
-      // Controlliamo se l'utente ha inserito qualcosa in QUESTO specifico slot strutturale
-      // In questo nuovo approccio, lo slot è identificato dall'ID del nodo che DEVE andarci
       const userAssignment = userTree.find(ut => ut.parentId === node.correctParentId && ut.id === node.id);
       
-      // Nota: nel nuovo gioco l'utente deve indovinare QUALE nodo va in QUALE slot.
-      // Per semplicità, lo slot è legato all'ID del nodo corretto.
-      
       return (
-        <div key={node.id} className="space-y-2">
+        <div key={node.id} className="space-y-1 lg:space-y-2">
           <NodeSlot
             nodeId={node.id}
             correctParentId={node.correctParentId}
@@ -127,14 +121,16 @@ export function DropZone({ userTree, gameData, onRemoveNode }: DropZoneProps) {
 
   return (
     <SortableContext items={userTree.map((node) => node.id)} strategy={verticalListSortingStrategy}>
-      <div className="min-h-full space-y-6 p-8 border rounded-2xl bg-card shadow-inner max-w-4xl mx-auto">
-        <div className="mb-6">
-          <h2 className="text-xl font-bold text-foreground mb-1">Completa la Struttura</h2>
-          <p className="text-sm text-muted-foreground">Trascina i concetti negli slot corretti per ricostruire la logica della mappa.</p>
+      <div className="min-h-full space-y-4 p-4 lg:space-y-6 lg:p-8 border rounded-xl lg:rounded-2xl bg-card shadow-inner max-w-4xl mx-auto">
+        <div className="mb-4 lg:mb-6">
+          <h2 className="text-lg lg:text-xl font-bold text-foreground mb-1">Struttura</h2>
+          <p className="text-xs lg:text-sm text-muted-foreground">Ricostruisci la logica della mappa.</p>
         </div>
         
-        <div className="flex flex-col gap-4">
-          {renderStructure(gameData.shuffledNodes)}
+        <div className="flex flex-col gap-2 lg:gap-4 overflow-x-auto pb-4">
+          <div className="min-w-fit">
+            {renderStructure(gameData.shuffledNodes)}
+          </div>
         </div>
       </div>
     </SortableContext>
