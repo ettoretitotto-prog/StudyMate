@@ -29,18 +29,17 @@ export function DraggableNode({ id, text, onClick, isSelected }: DraggableNodePr
       style={style}
       {...listeners}
       {...attributes}
-      onClick={(e) => {
-        if (onClick) {
-          e.preventDefault();
-          e.stopPropagation();
-          onClick();
-        }
-      }}
       className={cn(
         "cursor-grab border-2 bg-background p-3 shadow-sm transition-all",
         isSelected ? "border-primary ring-2 ring-primary/20 scale-[1.02]" : "border-gray-200 hover:border-primary/50",
         isDragging && "z-50 cursor-grabbing"
       )}
+      onClick={(e) => {
+        // Se non stiamo trascinando, eseguiamo l'onClick per la selezione
+        if (onClick && !isDragging) {
+          onClick();
+        }
+      }}
     >
       <p className="font-medium text-sm lg:text-base">{text}</p>
     </Card>
