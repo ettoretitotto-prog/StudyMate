@@ -146,7 +146,8 @@ export async function saveGameSession(
     .single();
   
   if (error) {
-    console.error("Error saving game session:", error);
+    // Check if the error is about a constraint or if the table/row exists
+    console.error("Error saving game session:", error.message || error);
     return null;
   }
   

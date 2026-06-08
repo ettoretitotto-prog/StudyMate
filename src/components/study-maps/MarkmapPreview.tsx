@@ -21,7 +21,12 @@ const MARKMAP_OPTIONS: Partial<Parameters<typeof Markmap.create>[1]> = {
     .markmap-foreign div {
       color: #ffffff;
     }
+    .markmap-node {
+      cursor: pointer;
+    }
   `,
+  zoom: true,
+  pan: true,
 };
 
 export function MarkmapPreview({ content, title }: MarkmapPreviewProps) {
