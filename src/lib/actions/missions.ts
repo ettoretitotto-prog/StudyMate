@@ -129,7 +129,7 @@ type SessionWithMission = StudySessionRow & {
   missions: MissionRow | null;
 };
 
-export async function completeSessionAction(sessionId: string, completed: boolean) {
+export async function completeSessionAction(sessionId: string, completed: boolean, customXp?: number) {
   const { supabase, user } = await getAuthenticatedUser();
 
   const { data, error } = await supabase
@@ -165,7 +165,8 @@ export async function completeSessionAction(sessionId: string, completed: boolea
     redirect("/dashboard");
   }
 
-  const xpAwarded = calculateMissionXp(mission.duration_minutes);
+  const baseXp = calculateMissionXp(mission.duration_minutes);
+  const xpAwarded = typeof customXp === "number" ? Math.max(0, customXp) : baseXp;
   const profile = await ensureUserProfile(supabase, user);
   const newTotalXp = profile.total_xp + xpAwarded;
 
